@@ -2,38 +2,28 @@ version: "3.9"
 
 services:
   nginx:
-    image: nginx:1.23
+    image: heartexlabs/label-studio:1.6.0
     restart: unless-stopped
     ports:
       # - "80:80"
       - "443:443"
     depends_on:
       - app
-    env_file:
-      - .env
     environment:
       - LABEL_STUDIO_HOST=${LABEL_STUDIO_HOST:-}
-      - NGINX_FILE=${NGINX_FILE:-default.conf}
       - NGINX_SSL_CERT=/certs/fullchain.pem
       - NGINX_SSL_CERT_KEY=/certs/privkey.pem
     volumes:
-      # keep in sync with deploy/docker-entrypoint.d/30-copy-static-data.sh
-      - source: static
-        target: /label-studio/label_studio
-        type: volume
-        volume:
-          nocopy: true
       - /ceph/label-studio:/label-studio/data:rw
-      - ./deploy/nginx/${NGINX_FILE:-default.conf}:/etc/nginx/templates/${NGINX_FILE:-default.conf}.template
-      - ./deploy/nginx/scripts:/docker-entrypoint.d/label-studio
+      - ./deploy/nginx/default.conf:/label-studio/deploy/nginx/default.conf
       - /etc/letsencrypt/live/hfsp/fullchain.pem:/certs/fullchain.pem:ro
       - /etc/letsencrypt/live/hfsp/privkey.pem:/certs/privkey.pem:ro
-    command: nginx -g "daemon off;"
+    command: nginx
 
   app:
     stdin_open: true
     tty: true
-    image: heartexlabs/label-studio:v1.6.0
+    image: heartexlabs/label-studio:1.6.0
     restart: unless-stopped
     expose:
       - "8080"
